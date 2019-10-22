@@ -21,7 +21,7 @@ FROM cdce/php:7.3-ext as prod
 LABEL maintainer "ZhaoWeidong <zhaoweidong@gouuse.cn>"
 
 COPY --from=0 /usr/local/lib/php/extensions/no-debug-non-zts-20180731/swoole.so /usr/local/lib/php/extensions/no-debug-non-zts-20180731/
-COPY docker-php-entrypoint /usr/bin/local/bin/
+COPY docker-php-entrypoint /usr/local/bin/
 RUN set -ex \
     && sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories \
     && apk add --no-cache --virtual .rundeps \
