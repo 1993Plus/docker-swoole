@@ -8,7 +8,7 @@ set -Eeo pipefail
 
 config_check() {
     local opt=$1
-    if [ "opt" = "base" ]; then
+    if [ "$opt" = "base" ]; then
         if [ -z "$DEPLOY_PATH" ]; then
             echo 'deploy path no set, use default path "/apps".'
             DEPLOY_PATH=/apps
