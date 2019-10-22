@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+
+set -Eeo pipefail
+
+##TODO: 
+# 1. 检测执行程序是否存在
+# 2. 使用普通用户运行服务
+
+config_check() {
+    local opt=$1
+    if [ "opt" = "base" ]; then
+        if [ -z "$DEPLOY_PATH" ]; then
+            echo 'deploy path no set, use default path "/apps".'
+            DEPLOY_PATH=/apps
+        else
+            echo "deploy path $DEPLOY_PATH"
+            DEPLOY_PATH=${DEPLOY_PATH%*\/}
+        fi
+        chown -R zceo "$DEPLOY_PATH"
+
+    fi
+
+    if [ "$opt" = "thrift" ]; then
+        if [ -z "$SERVICE_THRIFT_PORT" ]; then
+            echo 'thrift use default port ":8090".'
+            SERVICE_THRIFT_PORT=8090
+        fi
+        echo "thrift listen port $SERVICE_THRIFT_PORT"
+    fi
+
+    if [ "$opt" = "swoole" ]; then
+        if [ -z "$SERVICE_SWOOLE_PORT" ]; then
+            echo 'swoole use default port ":8080".'
+            SERVICE_SWOOLE_PORT=8080
+        fi
+        echo "swoole listen port $SERVICE_SWOOLE_PORT"
+    fi
+}
+
+# first arg is `-f` or `--some-option`
+# if [ "${1#-}" != "$1" ]; then
+#   rm -rf /var/tmp/*
+# 	set -- php "$@"
+# fi
+
+if [ "${1:0:1}" = '-' ]; then
+	set -- php "$@"
+fi
+
+if [ "$1" = "production" ]; then
+    rm -rf /var/tmp/*
+    config_check base
+    if [ "$SERVICE_THRIFT" = 1 ] || [ "$SERVICE_THRIFT" = "on" ]; then
+        echo "Start thrift service..."
+        config_check thrift
+        su-exec zceo php $DEPLOY_PATH/vendor/bin/cerpc-swoole -h0.0.0.0 -p$SERVICE_THRIFT_PORT -d
+    fi
+
+    if [ "$SERVICE_TASK" = 1 ] || [ "$SERVICE_TASK" = "on" ]; then
+        echo "Start task service..."
+        config_check
+        su-exec zceo php $DEPLOY_PATH/vendor/bin/process -d
+    fi
+
+    if [ "$SERVICE_SWOOLE" = 1 ] || [ "$SERVICE_SWOOLE" = "on" ]; then
+        echo "Start http service..."
+        config_check swoole
+        exec su-exec zceo php $DEPLOY_PATH/vendor/bin/lumen-swoole -h0.0.0.0 -p$SERVICE_SWOOLE_PORT
+    fi
+fi
+
+exec "$@"
