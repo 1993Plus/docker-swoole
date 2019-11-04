@@ -37,16 +37,11 @@ config_check() {
     fi
 }
 
-# first arg is `-f` or `--some-option`
-# if [ "${1#-}" != "$1" ]; then
-#   rm -rf /var/tmp/*
-# 	set -- php "$@"
-# fi
-
 if [ "${1:0:1}" = '-' ]; then
 	set -- php "$@"
 fi
 
+## 接收参数 1 为 production 时将进入 swoole 相关服务器运行模式.
 if [ "$1" = "production" ]; then
     rm -rf /var/tmp/*
     config_check base
@@ -57,9 +52,13 @@ if [ "$1" = "production" ]; then
     fi
 
     if [ "$SERVICE_TASK" = 1 ] || [ "$SERVICE_TASK" = "on" ]; then
-        echo "Start task service..."
-        config_check
-        su-exec zceo php $DEPLOY_PATH/vendor/bin/process -d
+	    if [ "$SERVICE_TASK_DEBUG" = 1 ] || [ "$SERVICE_TASK_DEBUG" = "on" ]; then
+      	        echo "Start task service..."
+                su-exec zceo php $DEPLOY_PATH/vendor/bin/process -d
+
+	    fi
+      	        echo "Start task service..."
+                su-exec zceo php $DEPLOY_PATH/vendor/bin/process -d >/dev/null
     fi
 
     if [ "$SERVICE_SWOOLE" = 1 ] || [ "$SERVICE_SWOOLE" = "on" ]; then
