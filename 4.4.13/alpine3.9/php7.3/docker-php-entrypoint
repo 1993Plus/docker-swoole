@@ -19,7 +19,7 @@ config_check() {
         chown -R zceo "$DEPLOY_PATH"
 
 	## 外部存储挂载目录.
-	if [ -z "STORAGE_MOUNT" ]; then
+	if [ -n "STORAGE_MOUNT" ]; then
 	    ln -snvf $STORAGE_MOUNT $DEPLOY_PATH/storage/upload
         fi
 
