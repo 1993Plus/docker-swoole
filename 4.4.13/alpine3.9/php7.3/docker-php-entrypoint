@@ -20,7 +20,10 @@ config_check() {
 
 	## 外部存储挂载目录.
 	if [ -n "STORAGE_MOUNT" ]; then
-	    ln -snvf $STORAGE_MOUNT $DEPLOY_PATH/storage/upload
+            if [ -d $DEPLOY_PATH/storage/upload ]; then
+                mv $DEPLOY_PATH/storage/upload{,_old}
+	    fi
+	    ln -snf $STORAGE_MOUNT $DEPLOY_PATH/storage/upload
         fi
 
     fi
