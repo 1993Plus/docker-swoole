@@ -31,6 +31,7 @@ BASE_CONFIGURE() {
 }
 
 SERVICE_RUN_CONFIGURE() {
+	local opt=$1
 	if [ "$opt" = "thrift" ]; then
 		if [ -z "$SERVICE_THRIFT_PORT" ]; then
 			echo 'thrift use default port ":8090".'
