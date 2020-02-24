@@ -30,8 +30,8 @@ RUN set -ex \
     \
      \
       \
-    addgroup -g 1000 -S zceo \
-    && adduser -S -H -k -D -s /sbin/nologin -G zceo -u 1000 zceo; \
+    addgroup -g 300 -S zceo \
+    && adduser -S -H -k -D -s /sbin/nologin -G zceo -u 300 zceo; \
     \
     docker-php-ext-enable swoole; \
     \
