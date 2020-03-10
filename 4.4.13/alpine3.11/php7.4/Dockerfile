@@ -30,7 +30,9 @@ RUN set -ex \
     \
      \
       \
-    addgroup -g 300 -S zceo \
+    ## Remove the gid 300 group.
+    delgroup abuild \
+    && addgroup -g 300 -S zceo \
     && adduser -S -H -k -D -s /sbin/nologin -G zceo -u 300 zceo; \
     \
     docker-php-ext-enable swoole; \
