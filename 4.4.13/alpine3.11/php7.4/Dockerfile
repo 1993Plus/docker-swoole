@@ -16,7 +16,7 @@ RUN set -ex \
 
 FROM cdce/php:7.4-ext as prod
 
-LABEL MAINTAINER "Zhaoweidong <zhaoweidong@300.cn>"
+LABEL MAINTAINER "Zhao weidong <zhaoweidong@300.cn>"
 
 COPY --from=0 /usr/local/lib/php/extensions/no-debug-non-zts-20190902/swoole.so /usr/local/lib/php/extensions/no-debug-non-zts-20190902/
 COPY docker-php-entrypoint /usr/local/bin/
@@ -48,6 +48,6 @@ RUN set -ex \
     && wget -O /apps/run.sh https://raw.githubusercontent.com/1993Plus/docker-php/master/run.sh \
     && chmod +x /apps/run.sh
 
-WORKDIR /opt/nginx/html
+WORKDIR /app
 
 CMD ["php"]
