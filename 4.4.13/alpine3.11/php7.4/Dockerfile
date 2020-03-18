@@ -1,7 +1,5 @@
 FROM cdce/php:7.4-ext as builder
 
-LABEL maintainer "ZhaoWeidong <zhaoweidong@gouuse.cn>"
-
 ENV EXT_SWOOLE_VERSION 4.4.13
 ENV EXT_DOWNLOAD_DIR /usr/src/ext
 
@@ -18,7 +16,7 @@ RUN set -ex \
 
 FROM cdce/php:7.4-ext as prod
 
-LABEL maintainer "ZhaoWeidong <zhaoweidong@gouuse.cn>"
+LABEL MAINTAINER "Zhaoweidong<zhaoweidong@300.cn>"
 
 COPY --from=0 /usr/local/lib/php/extensions/no-debug-non-zts-20190902/swoole.so /usr/local/lib/php/extensions/no-debug-non-zts-20190902/
 COPY docker-php-entrypoint /usr/local/bin/
