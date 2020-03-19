@@ -1,0 +1,93 @@
+#!/usr/bin/env bash
+
+set -Eeo pipefail
+
+##TODO: 
+# 1. 检测执行程序是否存在
+# 2. 使用普通用户运行服务
+
+BASE_CONFIGURE() {
+	if [ -z "$DEPLOY_PATH" ]; then
+		echo 'deploy path no set, use default path "/apps".'
+		DEPLOY_PATH=/apps
+	fi
+	echo "deploy path $DEPLOY_PATH"
+	DEPLOY_PATH=${DEPLOY_PATH%*\/}
+
+	if [ -z "$APP_RUN_USER" ]; then
+            APP_RUN_USER="zceo"
+	fi
+
+	if [ "$CH_DEPLOY_PATH_OWN" = 1 ] || [ "$CH_DEPLOY_PATH_OWN" = "on" ]; then
+	    chown $APP_RUN_USER "$DEPLOY_PATH"
+        fi
+
+	if [ -n "$APP_LOG_PATH" ]; then
+            chown  $APP_RUN_USER $APP_LOG_PATH
+        fi
+
+	## 外部存储挂载目录.
+	if [ -n "$STORAGE_MOUNT" ]; then
+		STORAGE_FULL_PATH="$DEPLOY_PATH/storage/upload"
+		if [ -d $STORAGE_FULL_PATH ]; then
+			if [ -L $STORAGE_FULL_PATH ]; then
+				rm -rf $STORAGE_FULL_PATH
+			else
+				mv ${STORAGE_FULL_PATH}{,_old}
+			fi
+		fi
+		ln -snf $STORAGE_MOUNT $STORAGE_FULL_PATH
+	fi
+}
+
+SERVICE_RUN_CONFIGURE() {
+	local opt=$1
+	if [ "$opt" = "thrift" ]; then
+		if [ -z "$SERVICE_THRIFT_PORT" ]; then
+			echo 'thrift use default port ":8090".'
+			SERVICE_THRIFT_PORT=8090
+		fi
+		echo "thrift listen port $SERVICE_THRIFT_PORT"
+	fi
+
+	if [ "$opt" = "swoole" ]; then
+		if [ -z "$SERVICE_SWOOLE_PORT" ]; then
+			echo 'swoole use default port ":8080".'
+			SERVICE_SWOOLE_PORT=8080
+		fi
+		echo "swoole listen port $SERVICE_SWOOLE_PORT"
+	fi
+}
+
+if [ "${1:0:1}" = '-' ]; then
+	set -- php "$@"
+fi
+
+## 接收参数 $1 为 production 时将进入 swoole 相关服务器运行模式.
+if [ "$1" = "production" ]; then
+	rm -rf /var/tmp/*
+	BASE_CONFIGURE
+	if [ "$SERVICE_THRIFT" = 1 ] || [ "$SERVICE_THRIFT" = "on" ]; then
+		echo "Start thrift service..."
+		SERVICE_RUN_CONFIGURE thrift
+		su-exec $APP_RUN_USER php $DEPLOY_PATH/vendor/bin/cerpc-swoole -h0.0.0.0 -p$SERVICE_THRIFT_PORT -d
+	fi
+
+	if [ "$SERVICE_TASK" = 1 ] || [ "$SERVICE_TASK" = "on" ]; then
+		if [ "$SERVICE_TASK_DEBUG" = 1 ] || [ "$SERVICE_TASK_DEBUG" = "on" ]; then
+			echo "Start task service..."
+			su-exec $APP_RUN_USER php $DEPLOY_PATH/vendor/bin/process -d
+
+		fi
+		echo "Start task service..."
+		su-exec $APP_RUN_USER php $DEPLOY_PATH/vendor/bin/process -d >/dev/null
+	fi
+
+	if [ "$SERVICE_SWOOLE" = 1 ] || [ "$SERVICE_SWOOLE" = "on" ]; then
+		echo "Start http service..."
+		SERVICE_RUN_CONFIGURE swoole
+		exec su-exec $APP_RUN_USER php $DEPLOY_PATH/vendor/bin/lumen-swoole -h0.0.0.0 -p$SERVICE_SWOOLE_PORT
+	fi
+fi
+
+exec "$@"
