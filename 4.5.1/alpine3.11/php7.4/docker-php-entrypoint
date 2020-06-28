@@ -23,6 +23,9 @@ BASE_CONFIGURE() {
         fi
 
 	if [ -n "$APP_LOG_PATH" ]; then
+	    if [ ! -d $APP_LOG_PATH ]; then
+	        mkdir -p $APP_LOG_PATH
+            fi
             chown  $APP_RUN_USER $APP_LOG_PATH
         fi
 
